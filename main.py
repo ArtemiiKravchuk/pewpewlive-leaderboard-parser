@@ -27,13 +27,10 @@ def split_list_by_br(lst: list) -> list[list]:
             itertools.groupby(lst, lambda x: x.tag_name=="br") if not k]
 
 
-def get_players() -> list[dict]:
+def get_players(driver) -> list[dict]:
     """Get basic data about players, including
     link for further information"""
     logger.info("Getting basic player info")
-
-    driver = webdriver.Firefox()
-    driver.get("https://pewpew.live/era2")
 
     table = driver.find_element(By.XPATH, "//*[@id='score_table']")
     rows = table.find_elements(By.TAG_NAME, "tr")
@@ -69,7 +66,7 @@ def get_players() -> list[dict]:
 def get_medals(driver: webdriver.Firefox) -> dict:
     """Get medals from the given page (open with
     the given driver)"""
-    logger.debug("Getting medals for a player")
+    logger.trace("Getting medals for a player")
 
     try:
         medals_header = driver.find_element(
@@ -104,12 +101,11 @@ def get_medals(driver: webdriver.Firefox) -> dict:
     return medals
     
 
-def get_full_data(player: dict) -> dict:
+def get_full_data(driver, player: dict) -> dict:
     """Get full data on given player"""
     logger.debug("Getting full player data on <y>{}</>",
                  player["name"])
 
-    driver = webdriver.Firefox(options=headless)
     driver.get(player["link"])
 
     discriminator = driver.find_element(
@@ -136,11 +132,14 @@ def main(file: str) -> dict:
     given file"""
     logger.info("Starting the script")
 
-    players = get_players()
+    driver = webdriver.Firefox(options=headless)
+    driver.get("https://pewpew.live/era2")
+
+    players = get_players(driver)
     full_data = []
 
     for player in players:
-        full_data.append(get_full_data(player))
+        full_data.append(get_full_data(driver, player))
 
     logger.info("Finished collecting the data")
 
